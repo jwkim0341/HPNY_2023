@@ -1,8 +1,13 @@
+import Home from "./views/Home.js";
+import Posts from "./views/Posts.js";
+import Upload from "./views/Upload.js";
+import NotFound from "./views/NotFound.js";
+
 const router = async () => {
   const routes = [
-    { path: '/', view: () => console.log('해피뉴이어') },
-    { path: '/upload', view: () => console.log('게시글 작성') },
-    { path: '/post/:id', view: () => console.log('게시글 보기') },
+    { path: "/", view: Home },
+    { path: "/upload", view: Upload },
+    { path: "/post/:id", view: Posts },
   ];
 
   const pageMatches = routes.map((route) => {
@@ -13,15 +18,32 @@ const router = async () => {
   });
 
   let match = pageMatches.find((pageMatch) => pageMatch.isMatch);
-  console.log(match.route.view());
+
+  if (!match) {
+    match = {
+      route: routes[0],
+      isMatch: true,
+    };
+    const page = new NotFound();
+    document.querySelector("#app").innerHTML = await page.getHtml();
+  } else {
+    const page = new match.route.view();
+    document.querySelector("#app").innerHTML = await page.getHtml();
+  }
 };
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.body.addEventListener('click', (e) => {
-    if (e.target.matches('[data-link]')) {
+window.addEventListener("popstate", router);
+
+const navigationTo = (url) => {
+  history.pushState(null, "", url);
+  router(); //rendering
+};
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.body.addEventListener("click", (e) => {
+    if (e.target.matches("[data-link]")) {
       e.preventDefault(); // a tag 이동 막아줌
-      history.pushState(null, '', e.target.href);
-      router();
+      navigationTo(e.target.href);
     }
   });
   router();
